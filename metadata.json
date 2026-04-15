@@ -1,0 +1,6 @@
+{
+  "name": "Glove Factory Manager",
+  "description": "A comprehensive tool for managing glove factory operations, tracking yarn inventory (bags and weight), and monitoring production across different glove varieties (Small, Medium, Large Half) with dozens and weight tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

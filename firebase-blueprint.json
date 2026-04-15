@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "YarnRecord": {
+      "title": "Yarn Record",
+      "description": "Tracks yarn inventory sent to the factory.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date", "description": "Date of the record" },
+        "bags": { "type": "number", "description": "Number of bags" },
+        "weight": { "type": "number", "description": "Weight in kg" },
+        "notes": { "type": "string", "description": "Optional notes" },
+        "createdBy": { "type": "string", "description": "UID of the user who created the record" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "bags", "weight", "createdBy", "createdAt"]
+    },
+    "ProductionRecord": {
+      "title": "Production Record",
+      "description": "Tracks gloves received from the factory.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date", "description": "Date of the record" },
+        "variety": { 
+          "type": "string", 
+          "enum": ["Small Half", "Medium Half", "Large Half"],
+          "description": "Glove variety" 
+        },
+        "dozens": { "type": "number", "description": "Quantity in dozens" },
+        "weight": { "type": "number", "description": "Weight in kg" },
+        "notes": { "type": "string", "description": "Optional notes" },
+        "createdBy": { "type": "string", "description": "UID of the user who created the record" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "variety", "dozens", "weight", "createdBy", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Application user profile.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/yarn_records/{recordId}": {
+      "schema": "YarnRecord",
+      "description": "Collection of yarn tracking records"
+    },
+    "/production_records/{recordId}": {
+      "schema": "ProductionRecord",
+      "description": "Collection of production tracking records"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    }
+  }
+}

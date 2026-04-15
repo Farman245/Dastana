@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: yarn_records
+    // Fields:
+    //   - date: string (YYYY-MM-DD)
+    //   - bags: number
+    //   - weight: number
+    //   - notes: string (optional)
+    //   - createdBy: string (UID)
+    //   - createdAt: string (ISO 8601)
+    //
+    // Collection: production_records
+    // Fields:
+    //   - date: string (YYYY-MM-DD)
+    //   - variety: string (Small Half, Medium Half, Large Half)
+    //   - dozens: number
+    //   - weight: number
+    //   - notes: string (optional)
+    //   - createdBy: string (UID)
+    //   - createdAt: string (ISO 8601)
+    //
+    // Collection: users
+    // Fields:
+    //   - uid: string
+    //   - email: string
+    //   - role: string (admin, user)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "farmanullahkhaksar87@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidYarnRecord(data) {
+      return data.keys().hasAll(['date', 'bags', 'weight', 'createdBy', 'createdAt']) &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.bags is number && data.bags >= 0 &&
+             data.weight is number && data.weight >= 0 &&
+             data.createdBy == request.auth.uid &&
+             data.createdAt is string;
+    }
+
+    function isValidProductionRecord(data) {
+      return data.keys().hasAll(['date', 'variety', 'dozens', 'weight', 'createdBy', 'createdAt']) &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.variety in ["Small Half", "Medium Half", "Large Half"] &&
+             data.dozens is number && data.dozens >= 0 &&
+             data.weight is number && data.weight >= 0 &&
+             data.createdBy == request.auth.uid &&
+             data.createdAt is string;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /yarn_records/{recordId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidYarnRecord(request.resource.data);
+      allow update: if isAuthenticated() && isValidYarnRecord(request.resource.data) && (request.resource.data.createdBy == resource.data.createdBy || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /production_records/{recordId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidProductionRecord(request.resource.data);
+      allow update: if isAuthenticated() && isValidProductionRecord(request.resource.data) && (request.resource.data.createdBy == resource.data.createdBy || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
